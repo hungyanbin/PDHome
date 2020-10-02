@@ -1,6 +1,5 @@
 package com.yanbin.pdhome.ui.login
 
-import android.app.Activity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -34,34 +33,40 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
 
-        loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
+        loginViewModel.loginState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer
 
-            // disable login button unless both username / password is valid
-            login.isEnabled = loginState.isDataValid
-
-            if (loginState.usernameError != null) {
-                username.error = getString(loginState.usernameError)
-            }
-            if (loginState.passwordError != null) {
-                password.error = getString(loginState.passwordError)
+            when(loginState) {
+                LoginUiState.Valid -> login.isEnabled = true
+                is LoginUiState.UserNameError -> {
+                    login.isEnabled = false
+                    username.error = getString(R.string.invalid_username)
+                }
+                is LoginUiState.PasswordError -> {
+                    login.isEnabled = false
+                    password.error = getString(R.string.invalid_password)
+                }
             }
         })
 
-        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
+        loginViewModel.loginProgress.observe(this@LoginActivity, Observer {
             val loginResult = it ?: return@Observer
 
-            loading.visibility = View.GONE
-            if (loginResult.error != null) {
-                showLoginFailed(loginResult.error)
+            when (loginResult) {
+                is LoginProgress.Success -> {
+                    loading.visibility = View.GONE
+                    updateUiWithUser(loginResult.displayName)
+                }
+                is LoginProgress.Failed -> {
+                    loading.visibility = View.GONE
+                    showLoginFailed(loginResult.errorMsg)
+                }
+                is LoginProgress.Loading -> {
+                    loading.visibility = View.VISIBLE
+                }
             }
-            if (loginResult.success != null) {
-                updateUiWithUser(loginResult.success)
-            }
-            setResult(Activity.RESULT_OK)
-
             //Complete and destroy login activity once successful
-            finish()
+//            finish()
         })
 
         username.afterTextChanged {
@@ -91,15 +96,14 @@ class LoginActivity : AppCompatActivity() {
             }
 
             login.setOnClickListener {
-                loading.visibility = View.VISIBLE
+//                loading.visibility = View.VISIBLE
                 loginViewModel.login(username.text.toString(), password.text.toString())
             }
         }
     }
 
-    private fun updateUiWithUser(model: LoggedInUserView) {
+    private fun updateUiWithUser(displayName: String) {
         val welcome = getString(R.string.welcome)
-        val displayName = model.displayName
         // TODO : initiate successful logged in experience
         Toast.makeText(
             applicationContext,
