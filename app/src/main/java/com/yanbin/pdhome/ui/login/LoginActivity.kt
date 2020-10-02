@@ -38,11 +38,11 @@ class LoginActivity : AppCompatActivity() {
 
             when(loginState) {
                 LoginUiState.Valid -> login.isEnabled = true
-                is LoginUiState.UserNameError -> {
+                LoginUiState.UserNameError -> {
                     login.isEnabled = false
                     username.error = getString(R.string.invalid_username)
                 }
-                is LoginUiState.PasswordError -> {
+                LoginUiState.PasswordError -> {
                     login.isEnabled = false
                     password.error = getString(R.string.invalid_password)
                 }

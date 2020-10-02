@@ -1,9 +1,9 @@
 package com.yanbin.pdhome.ui.login
 
-sealed class LoginUiState {
-    object Valid : LoginUiState()
-    object UserNameError : LoginUiState()
-    object PasswordError : LoginUiState()
+enum class LoginUiState {
+     Valid,
+     UserNameError ,
+     PasswordError
 }
 
 sealed class LoginProgress {
